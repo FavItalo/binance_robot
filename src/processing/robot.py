@@ -8,7 +8,9 @@ from json import loads
 from src.functions.bot_utils import set_dataframe
 
 
-async def bot(websocket:str, database:pd.DataFrame):
+async def bot(pair:str, database:pd.DataFrame):
+
+    websocket = f"wss://stream.binance.com:9443/stream?streams={pair}@trade"
 
     stream = websockets.connect(websocket)
 
@@ -31,7 +33,7 @@ async def main():
     database = pd.DataFrame(columns=["symbol", "Price", "Quantity"])
 
     while True:
-        for new_row in asyncio.as_completed({bot("wss://stream.binance.com:9443/stream?streams=btcusdt@trade", database), bot("wss://stream.binance.com:9443/stream?streams=ethusdt@trade", database)}):
+        for new_row in asyncio.as_completed({bot("btcusdt", database), bot("ethusdt", database)}):
             database = await new_row
         
         print(database)
