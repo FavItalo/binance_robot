@@ -17,12 +17,18 @@ async def bot(websocket:str, database:pd.DataFrame):
         _data = set_dataframe(loads(data_btc)["data"])
         database.append(_data)
         database = database.append(set_dataframe(loads(data_btc)["data"]))
+
+        for pair in database.loc[:,"symbol"]:
+            pairs_table = database.loc[database.loc[:, "symbol"] == pair,:]
+            if len(pairs_table) >= 5:
+                database.loc[pairs_table.index, "MA 5"] = pairs_table.Price.rolling(5).mean()
+
+
         return database
 
 async def main():
 
-    database = pd.DataFrame(columns=["symbol", "Time", "Price", "Quantity"])
-    database.to_csv()
+    database = pd.DataFrame(columns=["symbol", "Price", "Quantity"])
 
     while True:
         for new_row in asyncio.as_completed({bot("wss://stream.binance.com:9443/stream?streams=btcusdt@trade", database), bot("wss://stream.binance.com:9443/stream?streams=ethusdt@trade", database)}):
